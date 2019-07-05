@@ -1,6 +1,9 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
-from info import app, db
+from info import create_app, db
+
+# 通过指定配置的名字，创建对应配置的app
+app = create_app('development')
 
 # 创建终端命令对象
 manager = Manager(app)
