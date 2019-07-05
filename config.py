@@ -1,9 +1,10 @@
+import logging
+
 from redis import StrictRedis
 
 
 class Config(object):
     """项目配置"""
-    DEBUG = True
     # 设置secret_key  # base64.b64encode(os.urandom(48)
     SECRET_KEY = 'KfgaH5AEwtOCqYTczLGyItJvISts5svLlfFgK+jar0wsg3R820Whyuh9yTSnxQAZ'
 
@@ -30,3 +31,31 @@ class Config(object):
 
     # 设置session过期时间(参数在Flask中)
     PERMANENT_SESSION_LIFETIME = 86400 * 2
+
+    # 配置默认log等级
+    LOG_LEVEL = logging.DEBUG
+
+
+class DevelopmentConfig(Config):
+    """开发环境配置"""
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    """生产环境配置"""
+    DEBUG = False
+    # 设置log等级
+    LOG_LEVEL = logging.ERROR
+
+class TestingConfig(Config):
+    "单元测试环境配置"
+    DEBUG = True
+    # 设置log等级
+    LOG_LEVEL = logging.WARNING
+
+# 设置一个字典存放不同的配置类型
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig
+}
