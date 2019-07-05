@@ -11,6 +11,9 @@ from config import config
 # 创建mysql数据库对象
 db = SQLAlchemy()
 
+# 创建Redis对象全局变量
+redis_store = None  # type:StrictRedis
+
 
 # 使用工厂方法创建app实例
 def create_app(config_name):
@@ -20,6 +23,7 @@ def create_app(config_name):
     # 初始化mysql数据库对象
     db.init_app(app)
     # 初始化Redis数据库对象
+    global redis_store
     redis_store = StrictRedis(host=config[config_name].REDIS_HOST, port=config[config_name].REDIS_PORT)
     # 开启CSRF保护
     CSRFProtect(app)
@@ -33,7 +37,12 @@ def create_app(config_name):
     # 配置项目日志
     setup_log(config_name)
 
+    # 将蓝图注册到app中
+    from info.modules.index import index_blue
+    app.register_blueprint(index_blue)
+
     return app
+
 
 # 配置日志
 def setup_log(config_name):

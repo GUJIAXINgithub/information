@@ -12,11 +12,5 @@ Migrate(app, db)
 # 将数据库迁移的命令添加到manager中
 manager.add_command('db', MigrateCommand)
 
-
-@app.route('/')
-def index():
-    return 'index'
-
-
 if __name__ == '__main__':
     manager.run()

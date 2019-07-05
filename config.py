@@ -13,7 +13,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # 配置Redis
-    REDIS_HOST = 'localhost'
+    REDIS_HOST = '127.0.0.1'
     REDIS_PORT = 6379
 
     # 设置session保存位置
