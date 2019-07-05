@@ -1,8 +1,10 @@
 from flask import Flask
+from flask_migrate import Migrate, MigrateCommand
 from flask_session import Session  # 用来指定session保存的位置
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from redis import StrictRedis
+from flask_script import Manager
 
 
 class Config(object):
@@ -51,6 +53,12 @@ cookie中的 csrf_token 和表单中的 csrf_token 需要我们自己实现
 """
 # 设置session保存指定的位置
 Session(app)
+# 创建中断命令对象
+manager = Manager(app)
+# 将使用迁移类将应用对象app和数据库对象保存起来
+Migrate(app, db)
+# 将数据库迁移的命令添加到manager中
+manager.add_command('db', MigrateCommand)
 
 
 @app.route('/')
@@ -59,4 +67,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run()
+    manager.run()
