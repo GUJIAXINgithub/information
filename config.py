@@ -38,7 +38,8 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
-    DEBUG = True
+    # FIXME: 暂时不开启DEBUG，有问题
+    DEBUG = False
 
 
 class ProductionConfig(Config):
