@@ -47,11 +47,13 @@ class ProductionConfig(Config):
     # 设置log等级
     LOG_LEVEL = logging.ERROR
 
+
 class TestingConfig(Config):
-    "单元测试环境配置"
+    """单元测试环境配置"""
     DEBUG = True
     # 设置log等级
     LOG_LEVEL = logging.WARNING
+
 
 # 设置一个字典存放不同的配置类型
 config = {

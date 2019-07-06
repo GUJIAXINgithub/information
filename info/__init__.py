@@ -26,7 +26,7 @@ def create_app(config_name):
     global redis_store
     redis_store = StrictRedis(host=config[config_name].REDIS_HOST, port=config[config_name].REDIS_PORT)
     # 开启CSRF保护
-    CSRFProtect(app)
+    # CSRFProtect(app)
     """
     CSRFProtect只做验证工作，
     cookie中的 csrf_token 和表单中的 csrf_token 需要我们自己实现
