@@ -9,6 +9,7 @@ from redis import StrictRedis
 from config import config
 
 # 创建mysql数据库对象
+
 db = SQLAlchemy()
 
 # 创建Redis对象全局变量
@@ -40,6 +41,9 @@ def create_app(config_name):
     # 将蓝图注册到app中
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)
+
+    from info.modules.passport import passport_blue
+    app.register_blueprint(passport_blue)
 
     return app
 
