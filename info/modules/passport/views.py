@@ -1,6 +1,6 @@
 import re
 from random import randint
-from flask import request, make_response, current_app, jsonify
+from flask import request, make_response, current_app, jsonify, abort
 from info import redis_store, constants
 from info.lib.yuntongxun.sms import CCP
 from info.modules.passport import passport_blue
@@ -16,7 +16,10 @@ def get_image_code():
     """
 
     # 获取到当前的图片编号id
-    code_id = request.args.get('code_id')
+    code_id = request.args.get('imageCodeId', None)
+    # 判断code_id是否有值
+    if code_id is None:
+        return abort(403)
     # 使用captcha生成图片验证码
     name, text, image = captcha.generate_captcha()
 
@@ -37,7 +40,7 @@ def get_image_code():
     return response
 
 
-@passport_blue.route('/sms_code')
+@passport_blue.route('/sms_code', methods=['POST'])
 def send_sms():
     """
     1. 接收参数并判断是否有值
@@ -61,7 +64,7 @@ def send_sms():
         return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
 
     # 校验手机号是否正确
-    if not re.match('^1[3456789]\d{9}$', mobile):
+    if not re.match(r'^1[3456789]\d{9}$', mobile):
         return jsonify(errno=RET.DATAERR, errmsg='手机号不正确')
 
     # 通过image_code_id去redis中查询真实的image_code
