@@ -90,9 +90,11 @@ def send_sms():
 
     # 生成发送短信的内容并发送短信
     sms_code = '%06d' % randint(0, 999999)
-    result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
-    if result != 0:
-        return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
+    print(sms_code)
+    # FIXME: 暂时不发短信，验证码直接打印出来
+    # result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
+    # if result != 0:
+    #     return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
 
     # redis中保存短信验证码内容
     try:
@@ -141,8 +143,11 @@ def register():
     user.nick_name = mobile
     user.create_time = datetime.now()
     user.last_login = datetime.now()
-    # FIXME: 密码需要加密，暂时不做处理
-    user.password_hash = password
+    # 设置password属性会自动设置password_hash
+    user.password = password
+    # FIXME: 辅助理解
+    # print(password)
+    # print(user.password_hash)
 
     # 保存当前用户的状态
     try:
