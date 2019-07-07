@@ -67,6 +67,7 @@ def send_sms():
     try:
         user = User.query.filter(User.mobile == mobile).first()
     except Exception as e:
+        current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询错误')
 
     if user:
@@ -76,7 +77,7 @@ def send_sms():
     try:
         real_image_code = redis_store.get('ImageCode_' + image_code_id)
     except Exception as e:
-        current_app.logger.error(e)  # 使用log记录
+        current_app.logger.error(e)
         return jsonify(errno=RET.DATAERR, errmsg='查询失败')
 
     # 判断验证码是否过期

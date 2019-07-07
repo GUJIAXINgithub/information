@@ -32,27 +32,34 @@ $(function(){
     });
 
 
-	// 点击输入框，提示文字上移
-	$('.form_group').on('click focusin',function(){
-		$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
-	})
+	// $('.form_group').on('click focusin',function(){
+    // 	// 	$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
+    // 	// })
+    // 点击输入框，提示文字上移
+    $('.form_group').on('click',function(){
+        $(this).children('input').focus()
+    });
 
-	// 输入框失去焦点，如果输入框为空，则提示文字下移
-	$('.form_group input').on('blur focusout',function(){
-		$(this).parent().removeClass('hotline');
-		var val = $(this).val();
-		if(val=='')
-		{
-			$(this).siblings('.input_tip').animate({'top':22,'font-size':14},'fast');
-		}
-	})
+	// $('.form_group input').on('blur focusout',function(){
+	// 	$(this).parent().removeClass('hotline');
+	// 	var val = $(this).val();
+	// 	if(val=='')
+	// 	{
+	// 		$(this).siblings('.input_tip').animate({'top':22,'font-size':14},'fast');
+	// 	}
+	// })
+    // 输入框失去焦点，如果输入框为空，则提示文字下移
+    $('.form_group input').on('focusin',function(){
+        $(this).siblings('.input_tip').animate({'top':-5,'font-size':12},'fast')
+        $(this).parent().addClass('hotline');
+    });
 
 
 	// 打开注册框
 	$('.register_btn').click(function(){
 		$('.register_form_con').show();
 		generateImageCode()
-	})
+	});
 
 
 	// 登录框和注册框切换
@@ -110,24 +117,24 @@ $(function(){
         }
 
         // 发起登录请求
-    })
+    });
 
 
-    // TODO 注册按钮点击
+    // 注册按钮点击
     $(".register_form_con").submit(function (e) {
         // 阻止默认提交操作
-        e.preventDefault()
+        e.preventDefault();
 
 		// 取到用户输入的内容
-        var mobile = $("#register_mobile").val()
-        var smscode = $("#smscode").val()
-        var password = $("#register_password").val()
+        var mobile = $("#register_mobile").val();
+        var sms_code = $("#smscode").val();
+        var password = $("#register_password").val();
 
 		if (!mobile) {
             $("#register-mobile-err").show();
             return;
         }
-        if (!smscode) {
+        if (!sms_code) {
             $("#register-sms-code-err").show();
             return;
         }
@@ -142,17 +149,40 @@ $(function(){
             $("#register-password-err").show();
             return;
         }
-    })
-})
 
-var imageCodeId = ""
+		var params = {
+        "mobile": mobile,
+        "sms_code": sms_code,
+        "password": password,
+        };
+
+
+		$.ajax({
+            url:"/passport/register",
+            type: "post",
+            data: JSON.stringify(params),
+            contentType: "application/json",
+            success: function (resp) {
+                if (resp.errno == "0"){
+                    // 刷新当前界面
+                    location.reload()
+                }else {
+                    $("#register-password-err").html(resp.errmsg);
+                    $("#register-password-err").show()
+                }
+            }
+        })
+    })
+});
+
+var imageCodeId = "";
 
 // 生成一个图片验证码的编号，并设置页面中图片验证码img标签的src属性
 function generateImageCode() {
     // 浏览器要发起图片验证码请求/image_code?imageCodeId=xxxxx
-    imageCodeId = generateUUID()
+    imageCodeId = generateUUID();
     // 生成 url
-    var url = "/passport/image_code?imageCodeId=" + imageCodeId
+    var url = "/passport/image_code?imageCodeId=" + imageCodeId;
     // 给指定img标签设置src,设置了地址之后，img标签就会去向这个地址发起请求，请求图片
     $(".get_pic_code").attr("src", url)
 }
@@ -181,7 +211,7 @@ function sendSMSCode() {
         "mobile": mobile,
         "image_code": imageCode,
         "image_code_id": imageCodeId
-    }
+    };
 
     // 发起注册请求
     $.ajax({
@@ -196,20 +226,20 @@ function sendSMSCode() {
         success: function (response) {
             if (response.errno == "0") {
                 // 代表发送成功
-                var num = 60
+                var num = 60;
                 var t = setInterval(function () {
 
                     if (num == 1) {
                         // 代表倒计时结束
                         // 清除倒计时
-                        clearInterval(t)
+                        clearInterval(t);
 
                         // 设置显示内容
-                        $(".get_code").html("点击获取验证码")
+                        $(".get_code").html("点击获取验证码");
                         // 添加点击事件
                         $(".get_code").attr("onclick", "sendSMSCode();");
                     } else {
-                        num--
+                        num--;
                         // 设置 a 标签显示的内容
                         $(".get_code").html(num + "秒")
                     }
