@@ -22,8 +22,7 @@ class Config(object):
     # 指定session保存的Redis
     SESSION_REDIS = StrictRedis(host=REDIS_HOST,
                                 port=REDIS_PORT,
-                                db=0,
-                                decode_responses=True)
+                                db=1)
 
     # 设置开启session签名
     SESSION_SIGNER = True
