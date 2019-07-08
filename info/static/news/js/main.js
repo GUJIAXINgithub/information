@@ -319,3 +319,9 @@ function generateUUID() {
     });
     return uuid;
 }
+
+function logout() {
+    $.get("/passport/logout", function(response){
+        location.reload()
+    });
+}

@@ -178,7 +178,7 @@ def login():
     mobile = resp.get('mobile')
     password = resp.get('password')
 
-    if not all([mobile,password]):
+    if not all([mobile, password]):
         return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
 
     # 判断手机号是否合法
@@ -214,3 +214,15 @@ def login():
         return jsonify(errno=RET.DBERR, errmsg='记录失败')
 
     return jsonify(errno=RET.OK, errmsg='登陆成功')
+
+
+@passport_blue.route('/logout')
+def logout():
+    """
+    登出功能，清除session中的kv
+    :return:
+    """
+    session.pop('id')
+    session.pop('password')
+
+    return jsonify(errno=RET.OK, errmsg='登出成功')
