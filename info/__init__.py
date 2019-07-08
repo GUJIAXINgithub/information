@@ -5,6 +5,7 @@ from flask import Flask
 from flask_session import Session  # 用来指定session保存的位置
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 from config import config
 
@@ -30,11 +31,20 @@ def create_app(config_name):
                               db=0,
                               decode_responses=True)
     # 开启CSRF保护
-    # CSRFProtect(app)
-    """
-    CSRFProtect只做验证工作，
-    cookie中的 csrf_token 和表单中的 csrf_token 需要我们自己实现
-    """
+    CSRFProtect(app)
+
+    @app.after_request
+    def after_request(response):
+        """
+        CSRFProtect只做验证工作，
+        cookie中的 csrf_token 和表单中的 csrf_token 需要我们自己实现
+        """
+        # 生成一个csrf_token
+        csrf_token = generate_csrf()
+        # 将csrf_token存入cookie
+        response.set_cookie('csrf_token', csrf_token)
+        return response
+
     # 设置session保存指定的位置
     Session(app)
 

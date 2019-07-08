@@ -128,6 +128,9 @@ $(function(){
             method: "post",
             data: JSON.stringify(params),
             contentType: "application/json",
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             success: function (response) {
                 if (response.errno == "0") {
                     // 刷新当前界面
@@ -183,6 +186,9 @@ $(function(){
             type: "post",
             data: JSON.stringify(params),
             contentType: "application/json",
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             success: function (resp) {
                 if (resp.errno == "0"){
                     // 刷新当前界面
@@ -236,14 +242,13 @@ function sendSMSCode() {
 
     // 发起注册请求
     $.ajax({
-        // 请求地址
         url: "/passport/sms_code",
-        // 请求方式
         type: "post",
-        // 请求参数
         data: JSON.stringify(params),
-        // 请求参数的数据类型
         contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
         success: function (response) {
             if (response.errno == "0") {
                 // 代表发送成功
