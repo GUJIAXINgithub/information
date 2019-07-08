@@ -3,12 +3,12 @@ $(function(){
 	// 打开登录框
 	$('.login_btn').click(function(){
         $('.login_form_con').show();
-	})
+	});
 	
 	// 点击关闭按钮关闭登录框或者注册框
 	$('.shutoff').click(function(){
 		$(this).closest('form').hide();
-	})
+	});
 
     // 隐藏错误
     $(".login_form #mobile").focus(function(){
@@ -67,13 +67,13 @@ $(function(){
 		$('.login_form_con').hide();
 		$('.register_form_con').show();
         generateImageCode()
-	})
+	});
 
 	// 登录框和注册框切换
 	$('.to_login').click(function(){
 		$('.login_form_con').show();
 		$('.register_form_con').hide();
-	})
+	});
 
 	// 根据地址栏的hash值来显示用户中心对应的菜单
 	var sHash = window.location.hash;
@@ -98,13 +98,13 @@ $(function(){
 		}
 		$(this).addClass('active').siblings().removeClass('active');
 		$(this).find('a')[0].click()
-	})
+	});
 
-    // TODO 登录表单提交
+    // 登录表单提交
     $(".login_form_con").submit(function (e) {
-        e.preventDefault()
-        var mobile = $(".login_form #mobile").val()
-        var password = $(".login_form #password").val()
+        e.preventDefault();
+        var mobile = $(".login_form #mobile").val();
+        var password = $(".login_form #password").val();
 
         if (!mobile) {
             $("#login-mobile-err").show();
@@ -117,6 +117,26 @@ $(function(){
         }
 
         // 发起登录请求
+        var params = {
+            "mobile": mobile,
+            "password": password,
+        };
+
+        $.ajax({
+            url:"/passport/login",
+            method: "post",
+            data: JSON.stringify(params),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.errno == "0") {
+                    // 刷新当前界面
+                    location.reload();
+                }else {
+                    $("#login-password-err").html(response.errmsg);
+                    $("#login-password-err").show()
+                }
+            }
+        })
     });
 
 

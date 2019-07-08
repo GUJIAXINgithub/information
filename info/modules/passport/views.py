@@ -164,3 +164,53 @@ def register():
 
     # 返回注册的结果
     return jsonify(errno=RET.OK, errmsg='注册成功')
+
+
+@passport_blue.route('/login', methods=['POST'])
+def login():
+    """
+    登录功能逻辑
+    :return:
+    """
+
+    # 获取参数和判断是否有值
+    resp = request.json
+    mobile = resp.get('mobile')
+    password = resp.get('password')
+
+    if not all([mobile,password]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+    # 判断手机号是否合法
+    if not re.match(r'^1[3456789]\d{9}$', mobile):
+        return jsonify(errno=RET.DATAERR, errmsg='用户不存在')
+
+    # 从数据库查询出指定的用户
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询失败')
+
+    # 判断用户是否存在
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg='用户不存在')
+
+    # 校验密码
+    if not user.check_password(password):
+        return jsonify(errno=RET.PWDERR, errmsg='用户名或密码错误')
+
+    # 保存用户登录状态
+    session['id'] = user.id
+    session['password'] = user.password_hash
+
+    # 记录用户最后一次登录时间
+    user.last_login = datetime.now()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='记录失败')
+
+    return jsonify(errno=RET.OK, errmsg='登陆成功')
