@@ -2,7 +2,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from flask import Flask
-from flask_session import Session  # 用来指定session保存的位置
+from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
@@ -36,8 +36,8 @@ def create_app(config_name):
     @app.after_request
     def after_request(response):
         """
-        CSRFProtect只做验证工作，
-        cookie中的 csrf_token 和表单中的 csrf_token 需要我们自己实现
+        CSRFProtect只验证request中的csrf_token和cookie中的csrf_token是否一致，
+        cookie中的csrf_token和表单/request中的csrf_token需要我们自己实现
         """
         # 生成一个csrf_token
         csrf_token = generate_csrf()
@@ -57,6 +57,10 @@ def create_app(config_name):
 
     from info.modules.passport import passport_blue
     app.register_blueprint(passport_blue)
+
+    # 注册自定义过滤器
+    from info.utils.common import index_to_class
+    app.add_template_filter(index_to_class, 'index_to_class')
 
     return app
 

@@ -1,6 +1,8 @@
 from flask import render_template, current_app, session, jsonify
+
+from info import constants
 from info.modules.index import index_blue
-from info.models import User
+from info.models import User, News
 from info.utils.response_code import RET
 
 
@@ -22,8 +24,20 @@ def index():
         "user": user.to_dict() if user else None
     }
 
+    # 获取点击排行
+    news_li = list()
+    news_dict_li = list()
+    try:
+        news_li = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    for news in news_li:
+        news_dict_li.append(news.to_basic_dict())
+
     return render_template('news/index.html',
-                           data=data)
+                           data=data,
+                           news_dict_li=news_dict_li)
 
 
 @index_blue.route('/favicon.ico')
