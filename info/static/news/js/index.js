@@ -1,7 +1,7 @@
 var currentCid = 1; // 当前分类 id
 var cur_page = 1; // 当前页
-var total_page = 1;  // 总页数
-var data_querying = true;   // 是否正在向后台获取数据
+var total_page = 1; // 总页数
+var data_querying = true; // 表示后台正在加载数据
 
 
 $(function () {
@@ -43,47 +43,61 @@ $(function () {
         var nowScroll = $(document).scrollTop();
 
         if ((canScrollHeight - nowScroll) < 100) {
-            // TODO 判断页数，去更新新闻数据
+            // 判断页数，去更新新闻数据
+            if (!data_querying) {
+                // 设置正在加载数据，加载完毕后设置成false
+                data_querying = true;
+
+                if (cur_page < total_page) {
+                    cur_page += 1;
+                    updateNewsData()
+                }
+            }
         }
     })
-})
+});
 
 function updateNewsData() {
-    var params = {
-        "cid" : currentCid,
-        "page" : cur_page
-    };
+
+    console.log(cur_page)
 
     $.ajax({
-        url: "/news_list",
         type: "get",
-        data: JSON.stringify(params),
-        contentType: "application/json",
-        success: function (response) {
+        url: "/news_list",
+        dataType: "json",
+        data: {
+            'cid': currentCid,
+            'page': cur_page
+        }
+    }).done(function (response) {
+        // 设置总页数
+        total_page = response.data.total_pages
 
-            if(response.errno == "0"){
+        if (response.errno == "0") {
+
+            if (cur_page == 1) {
                 // 清除原有的内容
                 $(".list_con").html('')
-
-                for (var i=0;i<response.data.news_dict_li.length;i++) {
-                    var news = response.data.news_dict_li[i]
-                    var content = '<li>'
-                    content += '<a href="#" class="news_pic fl"><img src="' + news.index_image_url + '?imageView2/1/w/170/h/170"></a>'
-                    content += '<a href="#" class="news_title fl">' + news.title + '</a>'
-                    content += '<a href="#" class="news_detail fl">' + news.digest + '</a>'
-                    content += '<div class="author_info fl">'
-                    content += '<div class="source fl">来源：' + news.source + '</div>'
-                    content += '<div class="time fl">' + news.create_time + '</div>'
-                    content += '</div>'
-                    content += '</li>'
-                    $(".list_con").append(content)
-                }
-
-            } else {
-                alert(response.errmsg)
             }
 
+            for (var i = 0; i < response.data.news_dict_li.length; i++) {
+                var news = response.data.news_dict_li[i]
+                var content = '<li>'
+                content += '<a href="#" class="news_pic fl"><img src="' + news.index_image_url + '?imageView2/1/w/170/h/170"></a>'
+                content += '<a href="#" class="news_title fl">' + news.title + '</a>'
+                content += '<a href="#" class="news_detail fl">' + news.digest + '</a>'
+                content += '<div class="author_info fl">'
+                content += '<div class="source fl">来源：' + news.source + '</div>'
+                content += '<div class="time fl">' + news.create_time + '</div>'
+                content += '</div>'
+                content += '</li>'
+                $(".list_con").append(content)
+            }
+        } else {
+            alert(response.errmsg)
         }
-    })
 
+        // 设置加载完毕
+        data_querying = false
+    })
 }
