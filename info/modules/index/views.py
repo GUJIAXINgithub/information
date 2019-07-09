@@ -71,8 +71,8 @@ def news_list():
     # 获取参数
     resp = request.args
 
-    cid = resp.get('cid')  # 分类id，默认为1
-    page = resp.get('page')  # 页数，不传即获取第1页
+    cid = resp.get('cid', 1)  # 分类id，默认为1
+    page = resp.get('page', 1)  # 页数，不传即获取第1页
     per_page = resp.get('per_page', "10")  # 每页多少条数据，默认10条
 
     # 校验获取的参数
