@@ -1,7 +1,7 @@
 from flask import render_template, current_app, session, jsonify, request
 from info import constants
 from info.modules.index import index_blue
-from info.models import User, News
+from info.models import User, News, Category
 from info.utils.response_code import RET
 
 
@@ -25,24 +25,35 @@ def index():
             current_app.logger.error(e)
             return jsonify(errno=RET.DBERR, errmsg='查询失败')
 
-    data = {
-        "user": user.to_dict() if user else None
-    }
-
     # 获取点击排行
     news_li = list()
-    news_dict_li = list()
     try:
         news_li = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
     except Exception as e:
         current_app.logger.error(e)
 
+    news_dict_li = list()
     for news in news_li:
         news_dict_li.append(news.to_basic_dict())
 
-    return render_template('news/index.html',
-                           data=data,
-                           news_dict_li=news_dict_li)
+    # 获取新闻分类
+    category_li = list()
+    try:
+        category_li = Category.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    category_dict_li = list()
+    for category in category_li:
+        category_dict_li.append(category.to_dict())
+
+    data = {
+        "user": user.to_dict() if user else None,
+        'news_dict_li': news_dict_li,
+        'category_dict_li': category_dict_li
+    }
+
+    return render_template('news/index.html', data=data)
 
 
 @index_blue.route('/news_list')

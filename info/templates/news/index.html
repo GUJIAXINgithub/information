@@ -89,10 +89,9 @@
                 <h3>点击排行</h3>
             </div>
             <ul class="rank_list">
-                {% for news in news_dict_li %}
+                {% for news in data.news_dict_li %}
                     <li><span class="{{ loop.index | index_to_class }}">{{ loop.index }}</span><a href="#">{{ news.title }}</a></li>
                 {% endfor %}
-{#                <li><span class="first">1</span><a href="#">势如破竹！人民币再度连闯四道关口 在岸、离岸双双升破6.42</a></li>#}
             </ul>
         </div>
     </div>
