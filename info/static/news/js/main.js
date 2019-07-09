@@ -182,7 +182,7 @@ $(function(){
 
 
 		$.ajax({
-            url:"/passport/register",
+            url: "/passport/register",
             type: "post",
             data: JSON.stringify(params),
             contentType: "application/json",
