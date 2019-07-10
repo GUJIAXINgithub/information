@@ -2,7 +2,8 @@ import functools
 
 from flask import session, current_app, jsonify, g
 
-from info.models import User
+from info import constants
+from info.models import User, News
 from info.utils.response_code import RET
 
 
@@ -41,3 +42,18 @@ def user_login_data(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def click_list_info():
+    # 获取点击排行
+    news_li = list()
+    try:
+        news_li = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_li = list()
+    for item in news_li:
+        news_dict_li.append(item.to_basic_dict())
+
+    return news_dict_li

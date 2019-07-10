@@ -1,8 +1,7 @@
-from flask import render_template, current_app, session, jsonify, request, g
-from info import constants
+from flask import render_template, current_app, jsonify, request, g
 from info.modules.index import index_blue
-from info.models import User, News, Category
-from info.utils.common import user_login_data
+from info.models import News, Category
+from info.utils.common import user_login_data, click_list_info
 from info.utils.response_code import RET
 
 
@@ -23,17 +22,6 @@ def index():
     """
     user = g.user
 
-    # 获取点击排行
-    news_li = list()
-    try:
-        news_li = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
-    except Exception as e:
-        current_app.logger.error(e)
-
-    news_dict_li = list()
-    for news in news_li:
-        news_dict_li.append(news.to_basic_dict())
-
     # 获取新闻分类
     category_li = list()
     try:
@@ -47,7 +35,7 @@ def index():
 
     data = {
         "user": user.to_dict() if user else None,
-        'news_dict_li': news_dict_li,
+        'news_dict_li': click_list_info(),
         'category_dict_li': category_dict_li
     }
 
