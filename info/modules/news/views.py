@@ -1,4 +1,4 @@
-from flask import render_template, session, current_app, jsonify, g
+from flask import render_template, session, current_app, jsonify, g, abort
 
 from info import constants
 from info.models import User, News
@@ -28,9 +28,23 @@ def news_detail(news_id):
     for news in news_li:
         news_dict_li.append(news.to_basic_dict())
 
+    # 获取新闻详情
+    news = None
+
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        abort(404)
+
+    if news:
+        news.clicks += 1
+        news = news.to_dict()
+
     data = {
         "user": user.to_dict() if user else None,
-        'news_dict_li': news_dict_li
+        'news_dict_li': news_dict_li,
+        'news': news
     }
 
     return render_template('news/detail.html', data=data)
