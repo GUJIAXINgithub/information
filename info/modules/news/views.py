@@ -47,8 +47,8 @@ def news_detail(news_id):
         current_app.logger.error(e)
 
     news_dict_li = list()
-    for news in news_li:
-        news_dict_li.append(news.to_basic_dict())
+    for item in news_li:
+        news_dict_li.append(item.to_basic_dict())
 
     data = {
         "user": user.to_dict() if user else None,
