@@ -1,29 +1,21 @@
-from flask import render_template, session, current_app, jsonify
+from flask import render_template, session, current_app, jsonify, g
 
 from info import constants
 from info.models import User, News
 from info.modules.news import news_blue
+from info.utils.common import user_login_data
 from info.utils.response_code import RET
 
 
 @news_blue.route('/<int:news_id>')
+@user_login_data
 def news_detail(news_id):
     """
     新闻详情页面
     :param news_id:
     :return:
     """
-    # 从session中获取用户的id
-    user = None
-    user_id = session.get('id', None)
-
-    # 通过id获取用户信息，传给后台
-    if user_id:
-        try:
-            user = User.query.filter(User.id == user_id).first()
-        except Exception as e:
-            current_app.logger.error(e)
-            return jsonify(errno=RET.DBERR, errmsg='查询失败')
+    user = g.user
 
     # 获取点击排行
     news_li = list()

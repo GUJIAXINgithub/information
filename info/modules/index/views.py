@@ -1,7 +1,8 @@
-from flask import render_template, current_app, session, jsonify, request
+from flask import render_template, current_app, session, jsonify, request, g
 from info import constants
 from info.modules.index import index_blue
 from info.models import User, News, Category
+from info.utils.common import user_login_data
 from info.utils.response_code import RET
 
 
@@ -12,6 +13,7 @@ def favicon():
 
 
 @index_blue.route('/')
+@user_login_data
 def index():
     """
     从session中获取用户id，如果有，查询用户信息
@@ -19,17 +21,7 @@ def index():
     查询新闻分类信息
     :return: data:字典 存储了以上信息
     """
-    # 从session中获取用户的id
-    user = None
-    user_id = session.get('id', None)
-
-    # 通过id获取用户信息，传给后台
-    if user_id:
-        try:
-            user = User.query.filter(User.id == user_id).first()
-        except Exception as e:
-            current_app.logger.error(e)
-            return jsonify(errno=RET.DBERR, errmsg='查询失败')
+    user = g.user
 
     # 获取点击排行
     news_li = list()
