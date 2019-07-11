@@ -1,6 +1,6 @@
 from flask import render_template, current_app, jsonify, g, request
 from info import db
-from info.models import Comment
+from info.models import Comment, CommentLike
 from info.modules.news import news_blue
 from info.utils.common import user_login_data, click_list_info, get_news
 from info.utils.response_code import RET
@@ -147,3 +147,71 @@ def news_comment():
     data = comment.to_dict()
 
     return jsonify(errno=RET.OK, errmsg='评论成功', data=data)
+
+
+@news_blue.route('/comment_like', methods=['POST'])
+@user_login_data
+def comment_like():
+    """
+    点赞和取消点赞功能
+    :return: json
+    """
+    # 校验用户是否登录
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg='用户未登录')
+
+    # 获取参数
+    resp = request.json
+    comment_id = resp.get('comment_id')
+    action = resp.get('action')
+
+    # 校验参数
+    if not all([comment_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+    if action not in ['add', 'remove']:
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    try:
+        comment_id = int(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 根据comment_id查询评论，校验是否存在
+    comment = None
+
+    try:
+        comment = Comment.query.get(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not comment:
+        return jsonify(errno=RET.NODATA, errmsg='评论不存在')
+
+    # 代码执行到此说明用户登录，且评论存在
+    # 查询当前评论是否被当前用户点攒
+    try:
+        comment_like = CommentLike.query.filter(CommentLike.user_id == user.id,
+                                                CommentLike.comment_id == comment_id).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询错误')
+
+    if action == 'add' and not comment_like:
+        # 生成点攒
+        new_comment_like = CommentLike()
+        new_comment_like.user_id = user.id
+        new_comment_like.comment_id = comment_id
+        db.session.add(new_comment_like)
+        # 点赞数+1
+        comment.like_count += 1
+
+    elif action == 'remove' and comment_like:
+        # 删除点攒
+        db.session.delete(comment_like)
+        # 点赞数-1
+        comment.like_count -= 1
+
+    return jsonify(errno=RET.OK, errmsg="点攒成功")
