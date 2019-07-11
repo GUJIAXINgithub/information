@@ -28,7 +28,7 @@
 
         {# 评论栏 #}
         {% if data.user %}
-            <form action="" class="comment_form">
+            <form action="" class="comment_form" data-newsid="{{ data.news.id }}">
             <div class="person_pic">
                 <img src="{% if data.user.avatar_url %}{{ data.user.avatar_url }}{% else %}../../static/news/images/person01.png{% endif %}" alt="用户图标">
             </div>

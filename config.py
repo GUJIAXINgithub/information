@@ -42,7 +42,6 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
-    # FIXME: 暂时不开启DEBUG，有问题
     DEBUG = True
 
 

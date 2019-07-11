@@ -1,6 +1,5 @@
 import logging
 from logging.handlers import RotatingFileHandler
-
 from flask import Flask
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
@@ -10,7 +9,6 @@ from redis import StrictRedis
 from config import config
 
 # 创建mysql数据库对象
-
 db = SQLAlchemy()
 
 # 创建Redis对象全局变量

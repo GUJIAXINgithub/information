@@ -1,7 +1,5 @@
 import functools
-
 from flask import session, current_app, jsonify, g, abort
-
 from info import constants
 from info.models import User, News
 from info.utils.response_code import RET

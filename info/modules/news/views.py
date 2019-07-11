@@ -111,29 +111,39 @@ def news_comment():
     # 获取参数
     resp = request.json
     news_id = resp.get('news_id')
-    comment = resp.get('comment')
+    comment_info = resp.get('comment')
     parent_id = resp.get('parent_id')
 
     # 校验参数
-    if not all([news_id, comment]):
+    if not all([news_id, comment_info]):
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
-    # 根据新闻id查询新闻
-    news = get_news(news_id)
+    # 根据新闻id查询新闻，校验是否存在
+    get_news(news_id)
 
     # 初始化评论模型，保存数据
     comment = Comment()
     comment.user_id = user.id
-    comment.news_id = news.id
-    comment.content = comment
+    comment.news_id = news_id
+    comment.content = comment_info
     if parent_id:
+        try:
+            parent_id = int(parent_id)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
         comment.parent_id = parent_id
 
+    # 将评论添加到数据库
     try:
+        db.session.add(comment)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='数据库错误')
 
-    return jsonify(errno=RET.OK, errmsg='评论成功', data=comment.to_dict())
+    data = comment.to_dict()
+
+    return jsonify(errno=RET.OK, errmsg='评论成功', data=data)
