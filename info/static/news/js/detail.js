@@ -1,8 +1,15 @@
+// 从cookie中获取csrf_token
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
 }
 
+// 更新评论条数
+function updateCommentCount() {
+    var length = $(".comment_list").length;
+    $(".comment_count").html(length + "条评论");
+    $(".comment").html(length)
+}
 
 $(function(){
 
@@ -134,6 +141,9 @@ $(function(){
                     $('.comment_sub').blur();
                     // 清空输入框内容
                     $(".comment_input").val("")
+                    // 更新评论条数
+                    updateCommentCount()
+
                 }else {
                     alert(resp.errmsg)
                 }
@@ -234,6 +244,9 @@ $(function(){
                         $this.prev().val('')
                         // 关闭
                         $this.parent().hide()
+                        // 更新评论条数
+                        updateCommentCount()
+
                     }else {
                         alert(resp.errmsg)
                     }
