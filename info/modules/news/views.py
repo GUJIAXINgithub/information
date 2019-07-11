@@ -29,7 +29,7 @@ def news_detail(news_id):
 
     news = news.to_dict()
 
-    # 获取当前新闻的评论信息
+    # 获取当前新闻的所有评论信息
     comments = list()
 
     try:
@@ -40,7 +40,22 @@ def news_detail(news_id):
     comment_dict_li = list()
 
     for comment in comments:
-        comment_dict_li.append(comment.to_dict())
+        comment_dict = comment.to_dict()
+        # 默认没有点攒
+        comment_dict['is_like'] = False
+        if user:
+            # 查询当前用户是否点攒了当前评论
+            comment_like = None
+            try:
+                comment_like = CommentLike.query.filter(CommentLike.user_id == user.id,
+                                                        CommentLike.comment_id == comment.id).first()
+            except Exception as e:
+                current_app.logger.error(e)
+
+            if comment_like:
+                comment_dict['is_like'] = True
+
+        comment_dict_li.append(comment_dict)
 
     data = {
         "user": user.to_dict() if user else None,
