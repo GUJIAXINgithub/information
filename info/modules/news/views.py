@@ -121,7 +121,7 @@ def news_comment():
     # 根据新闻id查询新闻，校验是否存在
     get_news(news_id)
 
-    # 初始化评论模型，保存数据
+    # 初始化评论模型
     comment = Comment()
     comment.user_id = user.id
     comment.news_id = news_id
@@ -135,7 +135,7 @@ def news_comment():
 
         comment.parent_id = parent_id
 
-    # 将评论添加到数据库
+    # 将数据添加到数据库
     try:
         db.session.add(comment)
         db.session.commit()
