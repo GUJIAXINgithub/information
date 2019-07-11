@@ -214,4 +214,4 @@ def comment_like():
         # 点赞数-1
         comment.like_count -= 1
 
-    return jsonify(errno=RET.OK, errmsg="点攒成功")
+    return jsonify(errno=RET.OK, errmsg="操作成功")
