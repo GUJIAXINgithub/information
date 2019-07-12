@@ -37,10 +37,11 @@ def user_login_data(f):
                 return jsonify(errno=RET.DBERR, errmsg='查询失败')
 
         # 校验密码信息
-        if user_pwd != user.password_hash:
-            session.pop('id')
-            session.pop('password')
-            return redirect('/')
+        if user:
+            if user_pwd != user.password_hash:
+                session.pop('id')
+                session.pop('password')
+                return redirect('/')
 
         g.user = user
 

@@ -144,3 +144,54 @@ def pass_info():
         session['password'] = user.password_hash
 
         return jsonify(errno=RET.OK, errmsg='密码修改成功')
+
+
+@center_blue.route('/collection')
+@user_login_data
+def user_collection():
+    """
+    用户中心关注页面
+    :return: json
+    """
+    user = g.user
+    if not user:
+        return redirect('/')
+
+    # 获取参数
+    page = request.args.get('p', 1)
+
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 设置默认值
+    total_page = 1
+    current_page = 1
+    item_list = list()
+
+    try:
+        paginate = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
+        # 总页数
+        total_page = paginate.pages
+        # 当前页
+        current_page = paginate.page
+        # 当前页内容
+        item_list = paginate.items
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    collection_dict_li = list()
+
+    for item in item_list:
+        collection_dict_li.append(item.to_basic_dict())
+
+    data = {
+        'current_page': current_page,
+        'total_page': total_page,
+        'collections': collection_dict_li
+    }
+
+    return render_template('news/user_collection.html', data=data)
