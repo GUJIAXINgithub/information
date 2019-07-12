@@ -1,4 +1,4 @@
-from flask import render_template, g, redirect, request, jsonify, current_app
+from flask import render_template, g, redirect, request, jsonify, current_app, session
 from info import db, constants
 from info.modules.center import center_blue
 from info.utils.common import user_login_data
@@ -67,7 +67,7 @@ def base_info():
 def pic_info():
     """
     修改头像页面
-    :return:
+    :return: 'POST'=json
     """
     user = g.user
     if not user:
@@ -107,3 +107,40 @@ def pic_info():
         }
 
         return jsonify(errno=RET.OK, errmsg='上传成功', data=data)
+
+
+@center_blue.route('/pass_info', methods=["get", "post"])
+@user_login_data
+def pass_info():
+    """
+    修改密码页面
+    :return: 'POST'=json
+    """
+    user = g.user
+    if not user:
+        return redirect('/')
+
+    if request.method == 'GET':
+        return render_template('news/user_pass_info.html')
+
+    elif request.method == 'POST':
+        # 获取参数
+        resp = request.json
+        old_password = resp.get('old_password')
+        new_password = resp.get('new_password')
+
+        # 校验参数
+        if not all(['old_password','new_password']):
+            return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+        # 校验密码
+        if user.check_password(old_password):
+            user.password = new_password
+        else:
+            return jsonify(errno=RET.PWDERR, errmsg='密码错误')
+
+        # 密码修改成功后，修改session中的信息
+        session['id'] = user.id
+        session['password'] = user.password_hash
+
+        return jsonify(errno=RET.OK, errmsg='密码修改成功')

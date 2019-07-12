@@ -1,5 +1,5 @@
 import functools
-from flask import session, current_app, jsonify, g, abort
+from flask import session, current_app, jsonify, g, abort, redirect
 from info import constants
 from info.models import User, News
 from info.utils.response_code import RET
@@ -26,14 +26,21 @@ def user_login_data(f):
         # 从session中获取用户的id
         user = None
         user_id = session.get('id', None)
+        user_pwd = session.get('password', None)
 
-        # 通过id获取用户信息，传给后台
+        # 通过id获取用户信息
         if user_id:
             try:
                 user = User.query.filter(User.id == user_id).first()
             except Exception as e:
                 current_app.logger.error(e)
                 return jsonify(errno=RET.DBERR, errmsg='查询失败')
+
+        # 校验密码信息
+        if user_pwd != user.password_hash:
+            session.pop('id')
+            session.pop('password')
+            return redirect('/')
 
         g.user = user
 

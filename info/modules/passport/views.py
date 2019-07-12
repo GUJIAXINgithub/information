@@ -172,7 +172,6 @@ def login():
     登录功能逻辑
     :return:
     """
-
     # 获取参数和判断是否有值
     resp = request.json
     mobile = resp.get('mobile')
