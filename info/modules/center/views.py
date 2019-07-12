@@ -130,7 +130,7 @@ def pass_info():
         new_password = resp.get('new_password')
 
         # 校验参数
-        if not all(['old_password','new_password']):
+        if not all(['old_password', 'new_password']):
             return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
 
         # 校验密码
