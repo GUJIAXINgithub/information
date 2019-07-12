@@ -1,6 +1,8 @@
-from flask import render_template, g, redirect, request, jsonify
+from flask import render_template, g, redirect, request, jsonify, current_app
+from info import db, constants
 from info.modules.center import center_blue
 from info.utils.common import user_login_data
+from info.utils.image_storage import storage
 from info.utils.response_code import RET
 
 
@@ -27,7 +29,7 @@ def user_center():
 def base_info():
     """
     修改个人信息页面
-    :return:
+    :return: 'POST'=json
     """
     user = g.user
     if not user:
@@ -58,3 +60,50 @@ def base_info():
         user.gender = gender
 
         return jsonify(errno=RET.OK, errmsg='更新成功')
+
+
+@center_blue.route('/pic_info', methods=["get", "post"])
+@user_login_data
+def pic_info():
+    """
+    修改头像页面
+    :return:
+    """
+    user = g.user
+    if not user:
+        return redirect('/')
+
+    if request.method == 'GET':
+        data = {
+            'user': user.to_dict()
+        }
+        return render_template('news/user_pic_info.html', data=data)
+
+    elif request.method == 'POST':
+        # 获取参数
+        try:
+            avatar = request.files.get('avatar').read()
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DATAERR, errmsg='数据错误')
+
+        # 上传图片
+        try:
+            url = storage(avatar)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.THIRDERR, errmsg='上传失败')
+
+        # 将url保存到数据库
+        try:
+            user.avatar_url = url
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+        data = {
+            'avatar_url': constants.QINIU_DOMIN_PREFIX + url
+        }
+
+        return jsonify(errno=RET.OK, errmsg='上传成功', data=data)
