@@ -50,7 +50,7 @@ def base_info():
         if not all([nick_name, signature, gender]):
             return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
 
-        if len(nick_name) > 32 or len(signature) > 128 or gender not in ['MAN', 'WOMEN']:
+        if len(nick_name) > 32 or len(signature) > 128 or gender not in ['MAN', 'WOMAN']:
             return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
         user.nick_name = nick_name
