@@ -311,7 +311,9 @@ def news_list():
 
     try:
         paginate = user.news_list.paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
-        # paginate = News.query.filter(News.user_id == user.id).paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # paginate = News.query.filter(News.user_id == user.id).paginate(page,
+        #                                                                constants.OTHER_NEWS_PAGE_MAX_COUNT,
+        #                                                                False)
         # 总页数
         total_page = paginate.pages
         # 当前页
