@@ -311,6 +311,7 @@ def news_list():
 
     try:
         paginate = user.news_list.paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # paginate = News.query.filter(News.user_id == user.id).paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
         # 总页数
         total_page = paginate.pages
         # 当前页
@@ -320,15 +321,14 @@ def news_list():
     except Exception as e:
         current_app.logger.error(e)
 
-        print(item_list)
+    news_dict_list = list()
     for item in item_list:
-        print(item)
-        item_list.append(item.to_review_dict())
+        news_dict_list.append(item.to_review_dict())
 
     data = {
         'current_page': current_page,
         'total_page': total_page,
-        'news_list': item_list
+        'news_list': news_dict_list  # FIXME: item_list
     }
 
     return render_template('news/user_news_list.html', data=data)
