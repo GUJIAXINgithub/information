@@ -1,5 +1,6 @@
 from flask import render_template, g, redirect, request, jsonify, current_app, session
 from info import db, constants
+from info.models import Category, News
 from info.modules.center import center_blue
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -195,3 +196,86 @@ def user_collection():
     }
 
     return render_template('news/user_collection.html', data=data)
+
+
+@center_blue.route('/news_release', methods=["get", "post"])
+@user_login_data
+def news_release():
+    """
+    用户中心发布新闻页
+    :return: 'POST'=json
+    """
+    if request.method == 'GET':
+        # 查询新闻种类
+        categories = list()
+        try:
+            categories = Category.query.filter(Category.id != 1).all()
+        except Exception as e:
+            current_app.logger.error(e)
+
+        category_dict_li = list()
+        for item in categories:
+            category_dict_li.append(item.to_dict())
+
+        data = {
+            'categories': category_dict_li
+        }
+
+        return render_template('news/user_news_release.html', data=data)
+
+    elif request.method == 'POST':
+        # 校验登录
+        user = g.user
+        if not user:
+            return redirect('/')
+
+        # 获取参数
+        resp = request.form
+        title = resp.get('title')
+        category_id = resp.get('category_id')
+        digest = resp.get('digest')
+        index_image = request.files.get('index_image')
+        content = resp.get('content')
+
+        # 校验参数
+        if not all([title, category_id, digest, index_image, content]):
+            return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+        try:
+            category_id = int(category_id)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+        if len(title) > 256 or len(digest) > 512:
+            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+        # 读取图片, 存入七牛
+        try:
+            index_image = index_image.read()
+            index_image_url = constants.QINIU_DOMIN_PREFIX + storage(index_image)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.THIRDERR, errmsg='上传图片错误')
+
+        # 初始化新闻对象
+        news = News()
+        news.title = title
+        news.category_id = category_id
+        news.digest = digest
+        news.index_image_url = index_image_url
+        news.content = content
+        news.source = '个人发布'
+        news.user_id = user.id
+        news.status = 1
+
+        # 将对象保存到数据库
+        try:
+            db.session.add(news)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+        return jsonify(errno=RET.OK, errmsg='新闻发布成功等待审核')
