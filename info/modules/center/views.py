@@ -279,3 +279,56 @@ def news_release():
             return jsonify(errno=RET.DBERR, errmsg='数据库错误')
 
         return jsonify(errno=RET.OK, errmsg='新闻发布成功等待审核')
+
+
+@center_blue.route('/news_list')
+@user_login_data
+def news_list():
+    """
+    个人中心用户新闻列表
+    :return:
+    """
+    # 校验登录
+    user = g.user
+    if not user:
+        return redirect('/')
+
+    # 获取参数
+    page = request.args.get('p', 1)
+
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 根据参数查询数据库
+    # 设置默认值
+    total_page = 1
+    current_page = 1
+    item_list = list()
+
+    try:
+        paginate = user.news_list.paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # 总页数
+        total_page = paginate.pages
+        # 当前页
+        current_page = paginate.page
+        # 当前页内容
+        item_list = paginate.items
+    except Exception as e:
+        current_app.logger.error(e)
+
+        print(item_list)
+    for item in item_list:
+        print(item)
+        item_list.append(item.to_review_dict())
+
+    data = {
+        'current_page': current_page,
+        'total_page': total_page,
+        'news_list': item_list
+    }
+
+    return render_template('news/user_news_list.html', data=data)
