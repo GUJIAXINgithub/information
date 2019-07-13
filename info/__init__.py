@@ -70,6 +70,9 @@ def create_app(config_name):
     from info.modules.center import center_blue
     app.register_blueprint(center_blue)
 
+    from info.modules.admin import admin_blue
+    app.register_blueprint(admin_blue)
+
     # 注册自定义过滤器
     from info.utils.common import index_to_class
     app.add_template_filter(index_to_class, 'index_to_class')
