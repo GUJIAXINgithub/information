@@ -1,11 +1,27 @@
-from flask import render_template, request, jsonify, current_app, session, redirect
+from flask import render_template, request, jsonify, current_app, session, redirect, g, url_for
 
 from info.models import User
 from info.modules.admin import admin_blue
+from info.utils.common import check_admin
 from info.utils.response_code import RET
 
 
+@admin_blue.route('/')
+@check_admin
+def index():
+    # 校验是否登录
+    password = session.get('password', None)
+    user = g.user
+
+    if user:
+        if user.password_hash == password:
+            return render_template('admin/index.html')
+
+    return redirect(url_for('admin.admin_login'))
+
+
 @admin_blue.route('/login', methods=["GET", "POST"])
+@check_admin
 def admin_login():
     """
     管理员登录页面
@@ -13,14 +29,12 @@ def admin_login():
     """
     if request.method == 'GET':
         # 校验是否登录
-        user_id = session.get('id', None)
-        is_admin = session.get('is_admin', False)
         password = session.get('password', None)
+        user = g.user
 
-        user = User.query.filter(User.id == user_id).first()
         if user:
-            if user.is_admin == is_admin and user.password_hash == password:
-                return render_template('admin/index.html')
+            if user.password_hash == password:
+                return redirect(url_for('admin.index'))
 
         return render_template('admin/login.html')
 
@@ -52,4 +66,16 @@ def admin_login():
         session['is_admin'] = user.is_admin
         session['password'] = user.password_hash
 
-        return render_template('admin/index.html')
+        return redirect(url_for('admin.index'))
+
+
+@admin_blue.route('/logout', methods=["GET", "POST"])
+def admin_logout():
+    """
+    管理员登出
+    :return:
+    """
+    session.pop('id')
+    session.pop('password')
+    session.pop('is_admin')
+    return redirect(url_for('admin.admin_login'))

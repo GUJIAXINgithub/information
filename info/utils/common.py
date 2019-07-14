@@ -1,5 +1,5 @@
 import functools
-from flask import session, current_app, jsonify, g, abort, redirect
+from flask import session, current_app, jsonify, g, abort, redirect, url_for
 from info import constants
 from info.models import User, News
 from info.utils.response_code import RET
@@ -83,3 +83,30 @@ def get_news(news_id):
         abort(404)
 
     return news
+
+
+def check_admin(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        user_id = session.get('id', None)
+
+        if user_id:
+            user = None
+            try:
+                user = User.query.filter(User.id == user_id).first()
+            except Exception as e:
+                current_app.logger.error(e)
+
+            if not user:
+                return redirect(url_for('index.index'))
+            elif not user.is_admin:
+                return redirect(url_for('index.index'))
+            else:
+                # 该用户在数据库中存在，且是管理员
+                g.user = user
+
+        g.user = None
+
+        return f(*args, **kwargs)
+
+    return wrapper

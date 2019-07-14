@@ -223,5 +223,5 @@ def logout():
     """
     session.pop('id')
     session.pop('password')
-
+    session.pop('is_admin')
     return jsonify(errno=RET.OK, errmsg='登出成功')
