@@ -1,4 +1,8 @@
+import datetime
+import time
+
 from flask import render_template, request, jsonify, current_app, session, redirect, g, url_for
+from sqlalchemy import and_
 
 from info.models import User
 from info.modules.admin import admin_blue
@@ -86,3 +90,72 @@ def admin_logout():
     session.pop('password')
     session.pop('is_admin')
     return redirect(url_for('admin.admin_login'))
+
+
+@admin_blue.route('/user_count')
+def user_count():
+    """
+    管理员首页用户数据展示
+    :return:
+    """
+    # 获取总用户数
+    total_count = 0
+    try:
+        total_count = User.query.filter(User.is_admin == False).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    now = time.localtime()
+    # 获取月增用户数
+    mon_count = 0
+    try:
+        mon_begin_str = "%d-%02d-01" % (now.tm_year, now.tm_mon)
+        mon_begin_date = datetime.datetime.strptime(mon_begin_str, '%Y-%m-%d')
+        mon_count = User.query.filter(User.is_admin == False,
+                                      User.create_time >= mon_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 获取日增用户数
+    day_count = 0
+    try:
+        day_begin_str = "%d-%02d-%02d" % (now.tm_year, now.tm_mon, now.tm_mday)
+        day_begin_date = datetime.datetime.strptime(day_begin_str, '%Y-%m-%d')
+        day_count = User.query.filter(User.is_admin == False,
+                                      User.create_time >= day_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 获取图标中需要的数据
+    daily_date = []
+    daily_count = []
+
+    now_date_str = datetime.datetime.now().strftime('%Y-%m-%d')
+    now_date = datetime.datetime.strptime(now_date_str, '%Y-%m-%d')
+
+    for num in range(0, 31):
+        date_begin = now_date - datetime.timedelta(days=num)
+        date_end = now_date - datetime.timedelta(days=num - 1)
+
+        count = 0
+        try:
+            count = User.query.filter(User.is_admin == False,
+                                      and_(User.last_login >= date_begin, User.last_login < date_end)).count()
+        except Exception as e:
+            current_app.logger.error(e)
+
+        daily_date.append(date_begin.strftime('%Y-%m-%d'))
+        daily_count.append(count)
+
+    daily_date.reverse()
+    daily_count.reverse()
+
+    data = {
+        'total_count': total_count,
+        'mon_count': mon_count,
+        'day_count': day_count,
+        'active_date': daily_date,
+        'active_count': daily_count
+    }
+
+    return render_template('admin/user_count.html', data=data)
