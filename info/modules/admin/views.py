@@ -1,9 +1,10 @@
 import datetime
 import time
 
-from flask import render_template, request, jsonify, current_app, session, redirect, g, url_for
+from flask import render_template, request, current_app, session, redirect, g, url_for
 from sqlalchemy import and_
 
+from info import constants
 from info.models import User
 from info.modules.admin import admin_blue
 from info.utils.common import check_admin
@@ -93,9 +94,10 @@ def admin_logout():
 
 
 @admin_blue.route('/user_count')
+@check_admin
 def user_count():
     """
-    管理员首页用户数据展示
+    用户统计页面数据展示
     :return:
     """
     # 获取总用户数
@@ -159,3 +161,48 @@ def user_count():
     }
 
     return render_template('admin/user_count.html', data=data)
+
+
+@admin_blue.route('/user_list')
+@check_admin
+def user_list():
+    """
+    用户列表页面数据展示
+    :return:
+    """
+    # 获取参数
+    resp = request.args
+    page = resp.get('p', 1)
+
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    current_page = 1
+    total_page = 1
+    user_list = list()
+
+    try:
+        paginate = User.query.filter(User.is_admin == False) \
+            .order_by(User.last_login.desc()) \
+            .paginate(page, constants.ADMIN_USER_PAGE_MAX_COUNT, False)
+        user_list = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    user_dict_list = list()
+    for user_ in user_list:
+        user_dict_list.append(user_.to_admin_dict())
+
+    data = {
+        'current_page': current_page,
+        'total_page': total_page,
+        'user_list': user_dict_list
+    }
+
+    return render_template('admin/user_list.html', data=data)
