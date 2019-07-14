@@ -12,6 +12,16 @@ def admin_login():
     :return:
     """
     if request.method == 'GET':
+        # 校验是否登录
+        user_id = session.get('id', None)
+        is_admin = session.get('is_admin', False)
+        password = session.get('password', None)
+
+        user = User.query.filter(User.id == user_id).first()
+        if user:
+            if user.is_admin == is_admin and user.password_hash == password:
+                return render_template('admin/index.html')
+
         return render_template('admin/login.html')
 
     elif request.method == 'POST':
