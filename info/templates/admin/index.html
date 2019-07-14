@@ -10,13 +10,14 @@
 <body>
 	<div class="header">
 		<a href="#" class="logo fl"><img src="../../static/admin/images/logo.png" alt="logo"></a>
-		<a href="#" class="logout fr">退 出</a>
+		<a href="{{ (url_for('admin.admin_logout')) }}" class="logout fr">退 出</a>
 	</div>
 	
 	<div class="side_bar">
 		<div class="user_info">
-			<img src="../../static/admin/images/person.png" alt="张大山">
-			<p>欢迎你 <em>张大山</em></p>
+            <img src="{% if data.user.avatar_url %}{{ data.user.avatar_url }}{% else %}../../static/news/images/person01.png{% endif %}"
+			    alt="{{ data.user.nick_name }}">
+            <p>欢迎你 <em>{{ data.user.nick_name }}</em></p>
 		</div>
 
 		<div class="menu_con">
