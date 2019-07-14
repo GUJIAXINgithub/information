@@ -104,8 +104,8 @@ def check_admin(f):
             else:
                 # 该用户在数据库中存在，且是管理员
                 g.user = user
-
-        g.user = None
+        else:
+            g.user = None
 
         return f(*args, **kwargs)
 

@@ -15,7 +15,10 @@ def index():
 
     if user:
         if user.password_hash == password:
-            return render_template('admin/index.html')
+            data = {
+                'user': user.to_dict()
+            }
+            return render_template('admin/index.html', data=data)
 
     return redirect(url_for('admin.admin_login'))
 
@@ -45,28 +48,32 @@ def admin_login():
         password = resp.get('password')
 
         if not all([username, password]):
-            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+            return render_template('admin/login.html', errno=RET.PARAMERR, errmsg='参数错误')
 
         try:
             user = User.query.filter(User.mobile == username).first()
         except Exception as e:
             current_app.logger.error(e)
-            return jsonify(errno=RET.DBERR, errmsg='查询错误')
+            return render_template('admin/login.html', errno=RET.DBERR, errmsg='查询错误')
 
         if not user:
-            return jsonify(errno=RET.NODATA, errmsg='用户名或密码错误')
+            return render_template('admin/login.html', errno=RET.NODATA, errmsg='用户名或密码错误')
 
         if not user.check_password(password):
-            return jsonify(errno=RET.PWDERR, errmsg='用户名或密码错误')
+            return render_template('admin/login.html', errno=RET.PWDERR, errmsg='用户名或密码错误')
 
         if not user.is_admin:
-            return jsonify(errno=RET.ROLEERR, errmsg='禁止非管理员登录')
+            return render_template('admin/login.html', errno=RET.ROLEERR, errmsg='禁止非管理员登录')
 
         session['id'] = user.id
         session['is_admin'] = user.is_admin
         session['password'] = user.password_hash
 
-        return redirect(url_for('admin.index'))
+        data = {
+            'user': user.to_dict()
+        }
+
+        return render_template('admin/index.html', data=data)
 
 
 @admin_blue.route('/logout', methods=["GET", "POST"])
