@@ -260,3 +260,51 @@ def news_review():
     }
 
     return render_template('admin/news_review.html', data=data)
+
+
+@admin_blue.route('/news_review_detail')
+@check_admin
+def news_review_detail():
+    """
+    新闻审核详情页
+    :return:
+    """
+    # 获取新闻id
+    news_id = request.args.get('news_id', None)
+
+    # 校验参数
+    try:
+        news_id = int(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return redirect(url_for('admin.news_review'))
+
+    # 通过id查询新闻
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return redirect(url_for('admin.news_review'))
+
+    # 校验新闻是否存在
+    if not news:
+        return redirect(url_for('admin.news_review'))
+
+    # 校验新闻状态
+    if news.status == 0:
+        return redirect(url_for('admin.news_review'))
+
+    data = {
+        'news': news.to_dict()
+    }
+
+    return render_template('admin/news_review_detail.html', data=data)
+
+
+@admin_blue.route('/make_review', methods=['POST'])
+@check_admin
+def make_review():
+    """
+    确认审核：action/reject
+    :return:
+    """
