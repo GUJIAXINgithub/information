@@ -1,6 +1,6 @@
 from flask import render_template, current_app, jsonify, g, request
 from info import db
-from info.models import Comment, CommentLike
+from info.models import Comment, CommentLike, User
 from info.modules.news import news_blue
 from info.utils.common import user_login_data, click_list_info, get_news
 from info.utils.response_code import RET
@@ -16,16 +16,21 @@ def news_detail(news_id):
     """
     # 默认没有收藏新闻
     is_collect = False
+    # 默认没有关注作者
+    is_followed = False
     # 根据新闻id查询新闻
     news = get_news(news_id)
     news.clicks += 1
 
-    # 判断当前用户是否收藏
     user = g.user
 
     if user:
+        # 判断当前用户是否收藏
         if news in user.collection_news:
             is_collect = True
+        # 判断当前用户是关注作者
+        if news.user in user.followed:
+            is_followed = True
 
     news = news.to_dict()
 
@@ -61,6 +66,7 @@ def news_detail(news_id):
         "user": user.to_dict() if user else None,
         'news': news,
         'is_collect': is_collect,
+        'is_followed': is_followed,
         'news_dict_li': click_list_info(),
         'comments': comment_dict_li
     }
