@@ -311,9 +311,9 @@ def make_review():
     """
     # 接收参数
     resp = request.json
-    news_id = resp.get('news_id', None)
-    action = resp.get('action', None)
-    reason = resp.get('reason', None)
+    news_id = resp.get('news_id')
+    action = resp.get('action')
+    reason = resp.get('reason')
 
     # 校验参数
     if not all([news_id, action]):
@@ -527,3 +527,64 @@ def do_edit():
         return jsonify(errno=RET.DBERR, errmsg='数据库错误')
 
     return jsonify(errno=RET.OK, errmsg='操作成功')
+
+
+@admin_blue.route('/category_edit', methods=['GET', 'POST'])
+@check_admin
+def category_edit():
+    """
+    新闻分类管理
+    :return:
+    """
+    if request.method == 'GET':
+        try:
+            categories = Category.query.filter(Category.id != 1).all()
+        except Exception as e:
+            current_app.logger.error(e)
+            return redirect(url_for('admin.index'))
+
+        data = {
+            'categories': categories
+        }
+
+        return render_template('admin/news_type.html', data=data)
+
+    elif request.method == 'POST':
+        # 接收参数
+        resp = request.json
+        category_id = resp.get('id')
+        category_name = resp.get('name')
+
+        if not category_name:
+            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+        if category_id:
+            try:
+                category_id = int(category_id)
+            except Exception as e:
+                current_app.logger.error(e)
+                return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+            try:
+                category = Category.query.get(category_id)
+            except Exception as e:
+                current_app.logger.error(e)
+                return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+            if category:
+                category.name = category_name
+            else:
+                return jsonify(errno=RET.NODATA, errmsg='数据错误')
+        else:
+            category = Category()
+            category.name = category_name
+            db.session.add(category)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+        return jsonify(errno=RET.OK, errmsg='操作成功')
