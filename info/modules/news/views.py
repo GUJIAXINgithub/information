@@ -106,6 +106,8 @@ def news_collect():
         user.collection_news.remove(news)
     elif action == 'collect' and news not in user.collection_news:
         user.collection_news.append(news)
+    else:
+        return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
 
     try:
         db.session.commit()
@@ -234,5 +236,58 @@ def comment_like():
         db.session.delete(comment_like)
         # 点赞数-1
         comment.like_count -= 1
+
+    else:
+        return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
+
+    return jsonify(errno=RET.OK, errmsg="操作成功")
+
+
+@news_blue.route('/followed_user', methods=['POST'])
+@user_login_data
+def followed_user():
+    """
+    关注与取消关注
+    :return:
+    """
+    # 判断登录
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
+
+    # 获取参数
+    author_id = request.json.get("user_id")
+    action = request.json.get("action")
+
+    # 校验参数
+    if not all([author_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    if action not in ("follow", "unfollow"):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 查询作者
+    try:
+        author = User.query.get(author_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据库错误")
+
+    if not author:
+        return jsonify(errno=RET.NODATA, errmsg="数据错误")
+
+    if action == "follow" and author not in user.followed:
+        user.followed.append(author)
+    elif action == "unfollow" and author in user.followed:
+        user.followed.remove(author)
+    else:
+        return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
+
+    # 保存到数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据错误")
 
     return jsonify(errno=RET.OK, errmsg="操作成功")
