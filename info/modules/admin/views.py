@@ -356,3 +356,56 @@ def make_review():
         return jsonify(errno=RET.DBERR, errmsg='数据库错误')
 
     return jsonify(errno=RET.OK, errmsg='操作成功')
+
+
+@admin_blue.route('/news_edit')
+@check_admin
+def news_edit():
+    """
+    新闻版式编辑页面
+    :return:
+    """
+    # 获取参数
+    page = request.args.get('p', 1)
+    keywords = request.args.get('keywords', None)
+
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 查询数据库
+    total_page = 1
+    current_page = 1
+    news_list = list()
+
+    # 构建查询条件
+    filters = [News.status == 0]
+    if keywords:
+        filters.append(News.title.contains(keywords))
+
+    try:
+        paginates = News.query.filter(*filters) \
+            .order_by(News.create_time.desc()) \
+            .paginate(page, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+
+        current_page = paginates.page
+        total_page = paginates.pages
+        news_list = paginates.items
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_li = list()
+    for news_ in news_list:
+        news_dict_li.append(news_.to_basic_dict())
+
+    data = {
+        'current_page': current_page,
+        'total_page': total_page,
+        'news_list': news_dict_li
+    }
+
+    return render_template('admin/news_edit.html', data=data)
