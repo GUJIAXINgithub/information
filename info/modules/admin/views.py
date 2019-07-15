@@ -5,7 +5,7 @@ from flask import render_template, request, current_app, session, redirect, g, u
 from sqlalchemy import and_
 
 from info import constants, db
-from info.models import User, News
+from info.models import User, News, Category
 from info.modules.admin import admin_blue
 from info.utils.common import check_admin
 from info.utils.response_code import RET
@@ -310,8 +310,8 @@ def make_review():
     """
     # 接收参数
     resp = request.json
-    news_id = resp.get('news_id')
-    action = resp.get('action')
+    news_id = resp.get('news_id', None)
+    action = resp.get('action', None)
     reason = resp.get('reason', None)
 
     # 校验参数
@@ -409,3 +409,57 @@ def news_edit():
     }
 
     return render_template('admin/news_edit.html', data=data)
+
+
+@admin_blue.route('/news_edit_detail')
+@check_admin
+def news_edit_detail():
+    """
+    新闻审核详情页面
+    :return:
+    """
+    # 获取参数
+    news_id = request.args.get('news_id', None)
+
+    # 校验参数
+    if not news_id:
+        return redirect(url_for('admin.news_edit'))
+
+    try:
+        news_id = int(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return redirect(url_for('admin.news_edit'))
+
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return redirect(url_for('admin.news_edit'))
+
+    if not news:
+        return redirect(url_for('admin.news_edit'))
+
+    if news.status != 0:
+        return redirect(url_for('admin.news_edit'))
+
+    # 查询全部新闻分类
+    try:
+        categories = Category.query.filter(Category.id != 1).all()
+    except Exception as e:
+        current_app.logger.error(e)
+        return redirect(url_for('admin.news_edit'))
+
+    category_li = list()
+    for category in categories:
+        category_dict = category.to_dict()
+        if category.id == news.category_id:
+            category_dict['is_selected'] = True
+        category_li.append(category_dict)
+
+    data = {
+        'news': news,
+        'categories': category_li
+    }
+
+    return render_template('admin/news_edit_detail.html', data=data)
