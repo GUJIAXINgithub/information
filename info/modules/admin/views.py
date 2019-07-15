@@ -1,10 +1,10 @@
 import datetime
 import time
 
-from flask import render_template, request, current_app, session, redirect, g, url_for
+from flask import render_template, request, current_app, session, redirect, g, url_for, jsonify
 from sqlalchemy import and_
 
-from info import constants
+from info import constants, db
 from info.models import User, News
 from info.modules.admin import admin_blue
 from info.utils.common import check_admin
@@ -171,7 +171,7 @@ def user_list():
     :return:
     """
     # 获取参数
-    page = request.args.get('p')
+    page = request.args.get('p', 1)
 
     # 校验参数
     try:
@@ -217,7 +217,7 @@ def news_review():
     :return:
     """
     # 获取参数
-    page = request.args.get('p')
+    page = request.args.get('p', 1)
     keywords = request.args.get('keywords', None)
 
     # 校验参数
@@ -239,7 +239,7 @@ def news_review():
 
     try:
         paginates = News.query.filter(*filters) \
-            .order_by(News.create_time.asc(), News.status.desc()) \
+            .order_by(News.status.desc(), News.create_time.asc()) \
             .paginate(page, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
 
         current_page = paginates.page
@@ -305,6 +305,54 @@ def news_review_detail():
 @check_admin
 def make_review():
     """
-    确认审核：action/reject
-    :return:
+    确认审核：accept/reject
+    :return: json
     """
+    # 接收参数
+    resp = request.json
+    news_id = resp.get('news_id')
+    action = resp.get('action')
+    reason = resp.get('reason', None)
+
+    # 校验参数
+    if not all([news_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+    if action not in ['accept', 'reject']:
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    try:
+        news_id = int(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 根据news_id查询新闻
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询错误')
+
+    if not news:
+        return jsonify(errno=RET.NODATA, errmsg='新闻不存在')
+
+    if news.status != 1:
+        return redirect(url_for('admin.news_review'))
+
+    if action == 'accept':
+        news.status = 0
+    elif action == 'reject':
+        if not reason:
+            jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+        else:
+            news.status = -1
+            news.reason = reason
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+    return jsonify(errno=RET.OK, errmsg='操作成功')
