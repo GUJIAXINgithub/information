@@ -426,3 +426,63 @@ def other_info():
     }
     return render_template('news/other.html', data=data)
 
+
+@center_blue.route('/other_news_list')
+def other_news_list():
+    """
+    其他用户界面新闻列表
+    :return:
+    """
+    # 获取参数
+    page = request.args.get("p", 1)
+    user_id = request.args.get("user_id")
+
+    # 校验参数
+    if not all([page, user_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 查询用户
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询错误")
+
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg="用户不存在")
+
+    # 根据参数查询数据库
+    # 设置默认值
+    current_page = 1
+    total_page = 1
+    news_li = list()
+
+    try:
+        paginate = News.query.filter(News.user_id == user.id)\
+            .paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # 获取当前页数据
+        news_li = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_li = list()
+    for news_ in news_li:
+        news_dict_li.append(news_.to_review_dict())
+
+    data = {
+        "news_list": news_dict_li,
+        "total_page": total_page,
+        "current_page": current_page
+    }
+
+    return jsonify(errno=RET.OK, errmsg="OK", data=data)
