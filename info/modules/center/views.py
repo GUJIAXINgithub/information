@@ -334,3 +334,56 @@ def news_list():
     }
 
     return render_template('news/user_news_list.html', data=data)
+
+
+@center_blue.route('/user_follow')
+@user_login_data
+def user_follow():
+    """
+    个人中心我的关注
+    :return:
+    """
+    # 校验登录
+    user = g.user
+    if not user:
+        return redirect('/')
+
+    # 获取参数
+    page = request.args.get("p", 1)
+
+    # 校验参数
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 根据参数查询数据库
+    # 设置默认值
+    current_page = 1
+    total_page = 1
+    follows = list()
+
+    try:
+        paginates = user.followed.paginate(page, constants.USER_FOLLOWED_MAX_COUNT, False)
+        # 当前页数据
+        follows = paginates.items
+        # 当前页
+        current_page = paginates.page
+        # 总页数
+        total_page = paginates.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    user_dict_li = list()
+    for user_ in follows:
+        user_dict_li.append(user_.to_dict())
+
+    data = {
+        "users": user_dict_li,
+        "total_page": total_page,
+        "current_page": current_page
+    }
+
+    return render_template('news/user_follow.html', data=data)
