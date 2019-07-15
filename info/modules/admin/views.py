@@ -8,6 +8,7 @@ from info import constants, db
 from info.models import User, News, Category
 from info.modules.admin import admin_blue
 from info.utils.common import check_admin
+from info.utils.image_storage import storage
 from info.utils.response_code import RET
 
 
@@ -463,3 +464,66 @@ def news_edit_detail():
     }
 
     return render_template('admin/news_edit_detail.html', data=data)
+
+
+@admin_blue.route('/do_edit', methods=['POST'])
+@check_admin
+def do_edit():
+    """
+    确认审核：accept/reject
+    :return: json
+    """
+    # 接收参数
+    resp = request.form
+    news_id = resp.get("news_id")
+    title = resp.get("title")
+    digest = resp.get("digest")
+    content = resp.get("content")
+    index_image = request.files.get("index_image")
+    category_id = resp.get("category_id")
+
+    # 校验参数
+    if not all([news_id, title, digest, content, category_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    try:
+        news_id = int(news_id)
+        category_id = int(category_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 查询新闻
+    news = News
+    try:
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not news:
+        return jsonify(errno=RET.NODATA, errmsg="未查询到数据")
+
+    if index_image:
+        try:
+            index_image = index_image.read()
+            key = storage(index_image)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.THIRDERR, errmsg='图片上传错误')
+
+        news.index_image_url = constants.QINIU_DOMIN_PREFIX + key
+
+    news.title = title
+    news.digest = digest
+    news.category_id = category_id
+    news.content = content
+    news.update_time = datetime.datetime.now()
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+
+    return jsonify(errno=RET.OK, errmsg='操作成功')
