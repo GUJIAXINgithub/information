@@ -5,7 +5,7 @@ from flask import render_template, request, current_app, session, redirect, g, u
 from sqlalchemy import and_
 
 from info import constants
-from info.models import User
+from info.models import User, News
 from info.modules.admin import admin_blue
 from info.utils.common import check_admin
 from info.utils.response_code import RET
@@ -171,8 +171,7 @@ def user_list():
     :return:
     """
     # 获取参数
-    resp = request.args
-    page = resp.get('p', 1)
+    page = request.args.get('p')
 
     # 校验参数
     try:
@@ -186,23 +185,78 @@ def user_list():
     user_list = list()
 
     try:
-        paginate = User.query.filter(User.is_admin == False) \
+        paginates = User.query.filter(User.is_admin == False) \
             .order_by(User.last_login.desc()) \
             .paginate(page, constants.ADMIN_USER_PAGE_MAX_COUNT, False)
-        user_list = paginate.items
-        current_page = paginate.page
-        total_page = paginate.pages
+
+        user_list = paginates.items
+        current_page = paginates.page
+        total_page = paginates.pages
+
     except Exception as e:
         current_app.logger.error(e)
 
-    user_dict_list = list()
+    user_dict_li = list()
     for user_ in user_list:
-        user_dict_list.append(user_.to_admin_dict())
+        user_dict_li.append(user_.to_admin_dict())
 
     data = {
         'current_page': current_page,
         'total_page': total_page,
-        'user_list': user_dict_list
+        'user_list': user_dict_li
     }
 
     return render_template('admin/user_list.html', data=data)
+
+
+@admin_blue.route('/news_review')
+@check_admin
+def news_review():
+    """
+    新闻审核页面
+    :return:
+    """
+    # 获取参数
+    page = request.args.get('p')
+    keywords = request.args.get('keywords', None)
+
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 查询数据库
+    total_page = 1
+    current_page = 1
+    news_list = list()
+
+    # 构建查询条件
+    filters = [News.status != 0]
+    if keywords:
+        filters.append(News.title.contains(keywords))
+
+    try:
+        paginates = News.query.filter(*filters) \
+            .order_by(News.create_time.asc(), News.status.desc()) \
+            .paginate(page, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+
+        current_page = paginates.page
+        total_page = paginates.pages
+        news_list = paginates.items
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_li = list()
+    for news_ in news_list:
+        news_dict_li.append(news_.to_review_dict())
+
+    data = {
+        'current_page': current_page,
+        'total_page': total_page,
+        'news_list': news_dict_li
+    }
+
+    return render_template('admin/news_review.html', data=data)

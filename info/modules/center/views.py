@@ -173,13 +173,13 @@ def user_collection():
     item_list = list()
 
     try:
-        paginate = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
+        paginates = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
         # 总页数
-        total_page = paginate.pages
+        total_page = paginates.pages
         # 当前页
-        current_page = paginate.page
+        current_page = paginates.page
         # 当前页内容
-        item_list = paginate.items
+        item_list = paginates.items
 
     except Exception as e:
         current_app.logger.error(e)
@@ -310,16 +310,16 @@ def news_list():
     item_list = list()
 
     try:
-        paginate = user.news_list.paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        paginates = user.news_list.paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
         # paginate = News.query.filter(News.user_id == user.id).paginate(page,
         #                                                                constants.OTHER_NEWS_PAGE_MAX_COUNT,
         #                                                                False)
         # 总页数
-        total_page = paginate.pages
+        total_page = paginates.pages
         # 当前页
-        current_page = paginate.page
+        current_page = paginates.page
         # 当前页内容
-        item_list = paginate.items
+        item_list = paginates.items
     except Exception as e:
         current_app.logger.error(e)
 
