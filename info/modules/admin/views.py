@@ -87,9 +87,9 @@ def admin_logout():
     管理员登出
     :return:
     """
-    session.pop('id')
-    session.pop('password')
-    session.pop('is_admin')
+    session['id'] = None
+    session['password'] = None
+    session['is_admin'] = False
     return redirect(url_for('admin.admin_login'))
 
 

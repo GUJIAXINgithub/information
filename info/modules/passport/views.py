@@ -161,6 +161,7 @@ def register():
     # 保存用户登录状态
     session['id'] = user.id
     session['password'] = user.password_hash
+    session['is_admin'] = user.is_admin
 
     # 返回注册的结果
     return jsonify(errno=RET.OK, errmsg='注册成功')
@@ -202,6 +203,7 @@ def login():
     # 保存用户登录状态
     session['id'] = user.id
     session['password'] = user.password_hash
+    session['is_admin'] = user.is_admin
 
     # 记录用户最后一次登录时间
     user.last_login = datetime.now()
@@ -221,7 +223,7 @@ def logout():
     登出功能，清除session中的kv
     :return:
     """
-    session.pop('id')
-    session.pop('password')
-    session.pop('is_admin')
+    session['id'] = None
+    session['password'] = None
+    session['is_admin'] = False
     return jsonify(errno=RET.OK, errmsg='登出成功')

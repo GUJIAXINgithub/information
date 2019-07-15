@@ -98,9 +98,16 @@ def check_admin(f):
                 current_app.logger.error(e)
 
             if not user:
-                return redirect(url_for('index.index'))
+                # 数据库中用户不存在
+                g.user = None
+                return redirect(url_for('admin.admin_login'))
             elif not user.is_admin:
-                return redirect(url_for('index.index'))
+                # 数据库中用户存在，但不是管理员
+                session['id'] = None
+                session['password'] = None
+                session['is_admin'] = False
+                g.user = None
+                return redirect(url_for('admin.admin_login'))
             else:
                 # 该用户在数据库中存在，且是管理员
                 g.user = user
