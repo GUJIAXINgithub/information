@@ -91,11 +91,11 @@ def send_sms():
 
     # 生成发送短信的内容并发送短信
     sms_code = '%06d' % randint(0, 999999)
-    print(sms_code)
     # TODO: 发短信
-    result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
-    if result != 0:
-        return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
+    print('sms_code:', sms_code)
+    # result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
+    # if result != 0:
+    #     return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
 
     # redis中保存短信验证码内容
     try:
