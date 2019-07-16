@@ -90,7 +90,8 @@ def send_sms():
         return jsonify(errno=RET.DATAERR, errmsg='验证码错误')
 
     # 生成发送短信的内容并发送短信
-    sms_code = '%06d' % randint(0, 999999)
+    # sms_code = '%06d' % randint(0, 999999)
+    sms_code = '000000'
     # TODO: 发短信
     print('sms_code:', sms_code)
     # result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)

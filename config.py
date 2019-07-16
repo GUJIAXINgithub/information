@@ -9,7 +9,7 @@ class Config(object):
     SECRET_KEY = 'KfgaH5AEwtOCqYTczLGyItJvISts5svLlfFgK+jar0wsg3R820Whyuh9yTSnxQAZ'
 
     # 配置mysql
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:429005@localhost:3306/information'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@localhost:3306/information'
     # 设置不追踪数据库修改
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # 设置视图函数结束的时候自动commit
