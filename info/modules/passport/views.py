@@ -7,6 +7,7 @@ from info.lib.yuntongxun.sms import CCP
 from info.models import User
 from info.modules.passport import passport_blue
 from info.utils.captcha.captcha import captcha
+from info.utils.common import db_commit
 from info.utils.response_code import RET
 
 
@@ -91,10 +92,10 @@ def send_sms():
     # 生成发送短信的内容并发送短信
     sms_code = '%06d' % randint(0, 999999)
     print(sms_code)
-    # FIXME: 暂时不发短信，验证码直接打印出来
-    # result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
-    # if result != 0:
-    #     return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
+    # TODO: 发短信
+    result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], 1)
+    if result != 0:
+        return jsonify(errno=RET.THIRDERR, errmsg='短信发送失败')
 
     # redis中保存短信验证码内容
     try:
@@ -145,18 +146,10 @@ def register():
     user.last_login = datetime.now()
     # 设置password属性会自动设置password_hash
     user.password = password
-    # FIXME: 辅助理解
-    # print(password)
-    # print(user.password_hash)
 
     # 保存当前用户的状态
-    try:
-        db.session.add(user)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DATAERR, errmsg='创建用户失败')
+    db.session.add(user)
+    db_commit(db)
 
     # 保存用户登录状态
     session['id'] = user.id
@@ -205,14 +198,9 @@ def login():
     session['password'] = user.password_hash
     session['is_admin'] = user.is_admin
 
-    # 记录用户最后一次登录时间
+    # 记录用户最后一次登录时间  # FIXME: 逻辑需要修正
     user.last_login = datetime.now()
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg='记录失败')
+    db_commit(db)
 
     return jsonify(errno=RET.OK, errmsg='登陆成功')
 

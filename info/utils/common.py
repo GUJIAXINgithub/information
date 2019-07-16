@@ -49,7 +49,9 @@ def click_list_info():
     """
     news_li = list()
     try:
-        news_li = News.query.filter(News.status == 0).order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
+        news_li = News.query.filter(News.status == 0)\
+            .order_by(News.clicks.desc())\
+            .limit(constants.CLICK_RANK_MAX_NEWS)
     except Exception as e:
         current_app.logger.error(e)
 
@@ -117,3 +119,17 @@ def check_admin(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def db_commit(db):
+    """
+     db.session.commit()
+    :param db: 数据库模型
+    :return:
+    """
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='数据库错误')

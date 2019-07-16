@@ -69,14 +69,16 @@ def news_list():
     if cid != 1:
         filters.append(News.category_id == cid)
     try:
-        paginate = News.query.filter(*filters).order_by(News.create_time.desc()).paginate(page, per_page, False)
+        paginates = News.query.filter(*filters)\
+            .order_by(News.create_time.desc())\
+            .paginate(page, per_page, False)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询错误')
 
-    news_row_list = paginate.items  # 当前页模型对象列表
-    total_pages = paginate.pages  # 总页数
-    current_page = paginate.page  # 当前页
+    news_row_list = paginates.items  # 当前页模型对象列表
+    total_pages = paginates.pages  # 总页数
+    current_page = paginates.page  # 当前页
 
     news_dict_li = list()
     for news_row in news_row_list:

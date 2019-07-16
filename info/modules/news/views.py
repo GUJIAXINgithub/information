@@ -2,7 +2,7 @@ from flask import render_template, current_app, jsonify, g, request
 from info import db
 from info.models import Comment, CommentLike, User
 from info.modules.news import news_blue
-from info.utils.common import user_login_data, click_list_info, get_news
+from info.utils.common import user_login_data, click_list_info, get_news, db_commit
 from info.utils.response_code import RET
 
 
@@ -109,12 +109,7 @@ def news_collect():
     else:
         return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+    db_commit(db)
 
     return jsonify(errno=RET.OK, errmsg='收藏成功')
 
@@ -159,13 +154,8 @@ def news_comment():
         comment.parent_id = parent_id
 
     # 将数据添加到数据库
-    try:
-        db.session.add(comment)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+    db.session.add(comment)
+    db_commit(db)
 
     data = comment.to_dict()
 
@@ -240,6 +230,8 @@ def comment_like():
     else:
         return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
 
+    db_commit(db)
+
     return jsonify(errno=RET.OK, errmsg="操作成功")
 
 
@@ -283,11 +275,6 @@ def followed_user():
     else:
         return jsonify(errno=RET.DATAEXIST, errmsg='错误的操作')
 
-    # 保存到数据库
-    try:
-        db.session.commit()
-    except Exception as e:
-        current_app.logger.error(e)
-        return jsonify(errno=RET.DBERR, errmsg="数据错误")
+    db_commit(db)
 
     return jsonify(errno=RET.OK, errmsg="操作成功")

@@ -3,11 +3,10 @@ import time
 
 from flask import render_template, request, current_app, session, redirect, g, url_for, jsonify
 from sqlalchemy import and_
-
 from info import constants, db
 from info.models import User, News, Category
 from info.modules.admin import admin_blue
-from info.utils.common import check_admin
+from info.utils.common import check_admin, db_commit
 from info.utils.image_storage import storage
 from info.utils.response_code import RET
 
@@ -349,12 +348,7 @@ def make_review():
             news.status = -1
             news.reason = reason
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        current_app.logger.error(e)
-        db.session.rollback()
-        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+    db_commit(db)
 
     return jsonify(errno=RET.OK, errmsg='操作成功')
 
@@ -519,12 +513,7 @@ def do_edit():
     news.content = content
     news.update_time = datetime.datetime.now()
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        current_app.logger.error(e)
-        db.session.rollback()
-        return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+    db_commit(db)
 
     return jsonify(errno=RET.OK, errmsg='操作成功')
 
@@ -580,11 +569,6 @@ def category_edit():
             category.name = category_name
             db.session.add(category)
 
-        try:
-            db.session.commit()
-        except Exception as e:
-            current_app.logger.error(e)
-            db.session.rollback()
-            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+        db_commit(db)
 
         return jsonify(errno=RET.OK, errmsg='操作成功')

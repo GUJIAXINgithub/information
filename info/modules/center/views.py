@@ -2,7 +2,7 @@ from flask import render_template, g, redirect, request, jsonify, current_app, s
 from info import db, constants
 from info.models import Category, News, User
 from info.modules.center import center_blue
-from info.utils.common import user_login_data
+from info.utils.common import user_login_data, db_commit
 from info.utils.image_storage import storage
 from info.utils.response_code import RET
 
@@ -22,6 +22,7 @@ def user_center():
     data = {
         'user': user.to_dict()
     }
+
     return render_template('news/user.html', data=data)
 
 
@@ -60,6 +61,8 @@ def base_info():
         user.signature = signature
         user.gender = gender
 
+        db_commit(db)
+
         return jsonify(errno=RET.OK, errmsg='更新成功')
 
 
@@ -96,12 +99,8 @@ def pic_info():
             return jsonify(errno=RET.THIRDERR, errmsg='上传失败')
 
         # 将url保存到数据库
-        try:
-            user.avatar_url = url
-            db.session.commit()
-        except Exception as e:
-            current_app.logger.error(e)
-            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+        user.avatar_url = url
+        db_commit(db)
 
         data = {
             'avatar_url': constants.QINIU_DOMIN_PREFIX + url
@@ -139,6 +138,8 @@ def pass_info():
             user.password = new_password
         else:
             return jsonify(errno=RET.PWDERR, errmsg='密码错误')
+
+        db_commit(db)
 
         # 密码修改成功后，修改session中的信息
         session['id'] = user.id
@@ -270,13 +271,8 @@ def news_release():
         news.status = 1
 
         # 将对象保存到数据库
-        try:
-            db.session.add(news)
-            db.session.commit()
-        except Exception as e:
-            current_app.logger.error(e)
-            db.session.rollback()
-            return jsonify(errno=RET.DBERR, errmsg='数据库错误')
+        db.session.add(news)
+        db_commit(db)
 
         return jsonify(errno=RET.OK, errmsg='新闻发布成功等待审核')
 
